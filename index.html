@@ -272,12 +272,13 @@
         generate();
         renderDailyLucky();
         renderFavorites();
-        renderTrendChart();
         renderHeatmap();
         renderPairs();
         renderHistory();
         renderZodiacButtons();
         loadHoroscope(currentZodiac);
+        // 初始趨勢圖顯示產生的號碼
+        updateTrendChartForNumbers(currentNums);
         
         document.querySelectorAll('.lotto-btn').forEach(btn => {
             btn.onclick = () => {
@@ -322,7 +323,7 @@
         document.getElementById('jackpot').textContent = 'NT$ ' + config.jackpot;
         generate();
         analyze();
-        updateTrendChart();
+        updateTrendChartForNumbers(currentNums);
         renderHeatmap();
         renderPairs();
         renderHistory();
@@ -531,6 +532,74 @@
         renderTrendChart();
     }
     
+    function updateTrendChartForNumbers(numbers) {
+        if (chart) chart.destroy();
+        
+        let ctx = document.getElementById('trendChart').getContext('2d');
+        // 使用當次產生的號碼
+        let numsToShow = numbers.slice(0, 5); // 最多顯示5個
+        
+        let datasets = numsToShow.map((num, i) => {
+            let trend = stats.trends[num] || [];
+            // 產生漸層顏色
+            let hue = (i * 60) % 360;
+            let color = 'hsla(' + hue + ', 70%, 60%, 1)';
+            return {
+                label: '號碼 ' + num,
+                data: trend,
+                borderColor: color,
+                backgroundColor: color.replace('1)', '0.1)'),
+                fill: true,
+                tension: 0.3,
+                borderWidth: 2
+            };
+        });
+        
+        // 平均線
+        let avgData = [];
+        if (datasets.length > 0 && datasets[0].data.length > 0) {
+            let len = datasets[0].data.length;
+            for (let i = 0; i < len; i++) {
+                let sum = datasets.reduce((acc, d) => acc + (d.data[i] || 0), 0);
+                avgData.push(sum / datasets.length);
+            }
+        }
+        
+        let labels = datasets.length > 0 ? datasets[0].data.map((_, i) => '期' + (i+1)) : [];
+        
+        chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    ...datasets,
+                    { label: '平均', data: avgData, borderColor: 'rgba(0,255,127,0.8)', borderDash: [5,5], borderWidth: 2, pointRadius: 0, fill: false }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { 
+                    legend: { 
+                        display: true, 
+                        position: 'bottom', 
+                        labels: { color: '#aaa', boxWidth: 12, font: { size: 10 } } 
+                    },
+                    title: {
+                        display: true,
+                        text: '📈 當次產生號碼的歷史趨勢',
+                        color: '#ffd700',
+                        font: { size: 12 }
+                    }
+                },
+                scales: {
+                    x: { ticks: { color: '#888', font: { size: 9 } }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                    y: { ticks: { color: '#888', font: { size: 9 } }, grid: { color: 'rgba(255,255,255,0.05)' }, beginAtZero: true }
+                }
+            }
+        });
+    }
+    
     function renderHistory() {
         let html = data.slice(0, 20).reverse().map(d => {
             let nums = (d.drawNumberSize || []).slice(0, 6).join(', ');
@@ -652,6 +721,9 @@
         document.getElementById('consTag').textContent = hasCons ? '✅ 有連號' : '❌ 無連號';
         document.getElementById('repeatTag').className = 'tag ' + (hasRepeat ? 'tag-yes' : 'tag-no');
         document.getElementById('repeatTag').textContent = hasRepeat ? '✅ 參考上期' : '❌ 全新組合';
+        
+        // 更新趨勢圖為當次產生的號碼
+        updateTrendChartForNumbers(selected);
     }
     
     function saveFav() {
