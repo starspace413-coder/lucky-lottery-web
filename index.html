@@ -141,7 +141,7 @@
             </div>
             
             <div class="numbers" id="numbers"></div>
-            <p class="special-text">⭐ 特別號: <span id="special">-</span></p>
+            <p class="special-text">⭐ 特別號: <span id="special">-</span> <span id="special2Zone" style="display:none">| 第二區: <span id="special2">-</span></span></p>
             
             <div class="tags">
                 <span class="tag" id="consTag"></span>
@@ -227,9 +227,9 @@
 
     <script>
     const LOTTO_CONFIG = {
-        '649': { name: '大樂透', maxNum: 49, pickNum: 6, special: true, jackpot: '1.2 億' },
-        '539': { name: '今彩539', maxNum: 39, pickNum: 5, special: false, jackpot: '800 萬' },
-        'power': { name: '威力彩', maxNum: 38, pickNum: 6, special: true, jackpot: '3.2 億' }
+        '649': { name: '大樂透', maxNum: 49, pickNum: 6, special: true, special2: false, jackpot: '1.2 億' },
+        '539': { name: '今彩539', maxNum: 39, pickNum: 5, special: false, special2: false, jackpot: '800 萬' },
+        'power': { name: '威力彩', maxNum: 38, pickNum: 6, special: true, special2: true, special2Max: 8, jackpot: '3.2 億' }
     };
     
     const ZODIAC_SIGNS = [
@@ -257,6 +257,7 @@
     let currentTrendNum = 'hot';
     let currentNums = [];
     let currentSpecial = 0;
+    let currentSpecial2 = 0;
     let chart = null;
     
     const CONS_RATE = 0.56;
@@ -723,6 +724,11 @@
             currentSpecial = avail[Math.floor(Math.random() * avail.length)];
         }
         
+        // 威力彩第二區
+        if (config.special2) {
+            currentSpecial2 = Math.floor(Math.random() * config.special2Max) + 1;
+        }
+        
         currentNums = selected;
         
         // 計算當次產生的奇偶比例
@@ -738,6 +744,16 @@
         document.getElementById('numbers').innerHTML = selected.map(n => '<div class="ball">' + n + '</div>').join('');
         document.getElementById('special').textContent = config.special ? currentSpecial : '-';
         
+        // 第二區顯示
+        const special2Zone = document.getElementById('special2Zone');
+        const special2El = document.getElementById('special2');
+        if (config.special2) {
+            special2Zone.style.display = 'inline';
+            special2El.textContent = currentSpecial2;
+        } else {
+            special2Zone.style.display = 'none';
+        }
+        
         document.getElementById('consTag').className = 'tag ' + (hasCons ? 'tag-yes' : 'tag-no');
         document.getElementById('consTag').textContent = hasCons ? '✅ 有連號' : '❌ 無連號';
         document.getElementById('repeatTag').className = 'tag ' + (hasRepeat ? 'tag-yes' : 'tag-no');
@@ -749,7 +765,7 @@
     
     function saveFav() {
         let favs = JSON.parse(localStorage.getItem('lotto_favs') || '[]');
-        favs.unshift({ type: currentType, nums: [...currentNums], special: currentSpecial });
+        favs.unshift({ type: currentType, nums: [...currentNums], special: currentSpecial, special2: currentSpecial2 });
         favs = favs.slice(0, 20);
         localStorage.setItem('lotto_favs', JSON.stringify(favs));
         renderFavorites();
@@ -764,7 +780,8 @@
         }
         el.innerHTML = favs.map(function(f, i) {
             let specHtml = f.special ? '<span style="color:#f55768">⭐' + f.special + '</span>' : '';
-            return '<div class="fav-item"><span>' + f.nums.join(', ') + ' ' + specHtml + '</span><button class="del-btn" onclick="delFav(' + i + ')">刪</button></div>';
+            let spec2Html = f.special2 ? '<span style="color:#ffd700">｜' + f.special2 + '</span>' : '';
+            return '<div class="fav-item"><span>' + f.nums.join(', ') + ' ' + specHtml + spec2Html + '</span><button class="del-btn" onclick="delFav(' + i + ')">刪</button></div>';
         }).join('');
     }
     
