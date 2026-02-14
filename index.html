@@ -330,16 +330,34 @@
     }
     
     async function loadData() {
+        const config = LOTTO_CONFIG[currentType];
+        
+        // 根據彩券類型使用對應的 API
+        const apiMap = {
+            '649': 'Lotto649Result',
+            '539': 'Lotto539Result', 
+            'power': 'SuperLottoResult'
+        };
+        
+        const apiName = apiMap[currentType] || 'Lotto649Result';
         const months = ['2025-09','2025-10','2025-11','2025-12','2026-01','2026-02'];
         
         for (let m of months) {
             try {
-                let r = await fetch('https://api.taiwanlottery.com/TLCAPIWeB/Lottery/Lotto649Result?period&month=' + m + '&pageNum=1&pageSize=50');
+                let r = await fetch('https://api.taiwanlottery.com/TLCAPIWeB/Lottery/' + apiName + '?period&month=' + m + '&pageNum=1&pageSize=50');
                 let d = await r.json();
-                if (d.content && d.content.lotto649Res) {
+                
+                // 根據不同 API 回應格式處理
+                if (currentType === '649' && d.content && d.content.lotto649Res) {
                     data.push(...d.content.lotto649Res);
+                } else if (currentType === '539' && d.content && d.content.lotto539Res) {
+                    data.push(...d.content.lotto539Res);
+                } else if (currentType === 'power' && d.content && d.content.superLottoRes) {
+                    data.push(...d.content.superLottoRes);
                 }
-            } catch(e) {}
+            } catch(e) {
+                console.log('API error:', e);
+            }
         }
         
         data.sort((a, b) => a.lottoPeriodNo - b.lottoPeriodNo);
