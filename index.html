@@ -8,12 +8,15 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: system-ui, sans-serif; background: linear-gradient(135deg, #1a1a2e, #16213e); min-height: 100vh; padding: 15px; color: #fff; }
-        .container { max-width: 500px; margin: 0 auto; }
+        .container { max-width: 550px; margin: 0 auto; }
         h1 { text-align: center; font-size: 1.8em; background: linear-gradient(45deg, #ffd700, #ff8c00); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 5px; }
         .card { background: rgba(255,255,255,0.1); border-radius: 15px; padding: 15px; margin-bottom: 12px; }
         .mode-btns { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 15px; }
         .mode-btn { flex: 1; min-width: 60px; padding: 10px 5px; border: 2px solid transparent; border-radius: 8px; background: rgba(255,255,255,0.1); color: #fff; cursor: pointer; font-size: 0.8em; }
         .mode-btn.active { border-color: #ffd700; background: rgba(255,215,0,0.2); }
+        .lotto-type-btns { display: flex; gap: 5px; margin-bottom: 15px; }
+        .lotto-btn { flex: 1; padding: 8px; border: 2px solid transparent; border-radius: 8px; background: rgba(255,255,255,0.1); color: #aaa; cursor: pointer; font-size: 0.75em; }
+        .lotto-btn.active { border-color: #00ff7f; color: #00ff7f; background: rgba(0,255,127,0.1); }
         .numbers { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin: 15px 0; }
         .ball { width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2em; font-weight: bold; background: linear-gradient(145deg, #667eea, #764ba2); animation: float 2s infinite; }
         .ball.special { background: linear-gradient(145deg, #f093fb, #f5576c); }
@@ -36,16 +39,63 @@
         .fav-item { background: rgba(255,255,255,0.05); padding: 8px; border-radius: 8px; margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center; }
         .del-btn { background: rgba(255,99,71,0.3); border: none; color: #ff6347; padding: 4px 8px; border-radius: 8px; cursor: pointer; }
         .tips { text-align: center; color: #666; font-size: 0.65em; margin-top: 15px; padding: 10px; background: rgba(255,0,0,0.1); border-radius: 8px; }
-        .chart-container { position: relative; height: 200px; margin-top: 10px; }
+        .chart-container { position: relative; height: 180px; margin-top: 10px; }
         .trend-title { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
         .trend-controls { display: flex; gap: 5px; }
         .trend-btn { padding: 4px 8px; border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; background: transparent; color: #aaa; font-size: 0.7em; cursor: pointer; }
         .trend-btn.active { border-color: #ffd700; color: #ffd700; }
+        .jackpot { text-align: center; padding: 10px; background: linear-gradient(45deg, rgba(255,215,0,0.2), rgba(255,140,0,0.2)); border-radius: 10px; margin-bottom: 12px; }
+        .jackpot-label { font-size: 0.7em; color: #aaa; }
+        .jackpot-val { font-size: 1.4em; font-weight: bold; color: #ffd700; }
+        .heatmap { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; margin-top: 10px; }
+        .heatmap-cell { aspect-ratio: 1; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.7em; font-weight: bold; }
+        .pair-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; margin-top: 10px; }
+        .pair-item { background: rgba(255,255,255,0.05); padding: 8px 3px; border-radius: 6px; text-align: center; }
+        .pair-nums { font-size: 0.85em; color: #ffd700; }
+        .pair-count { font-size: 0.65em; color: #aaa; }
+        .odd-even { display: flex; justify-content: space-around; margin-top: 10px; }
+        .oe-item { text-align: center; }
+        .oe-bar { width: 30px; height: 60px; background: rgba(255,255,255,0.1); border-radius: 4px; position: relative; overflow: hidden; }
+        .oe-fill { position: absolute; bottom: 0; width: 100%; transition: height 0.5s; }
+        .oe-fill.odd { background: linear-gradient(to top, #667eea, #764ba2); }
+        .oe-fill.even { background: linear-gradient(to top, #f093fb, #f5576c); }
+        .oe-label { font-size: 0.7em; color: #aaa; margin-top: 5px; }
+        .history-toggle { text-align: center; margin-bottom: 10px; }
+        .history-toggle button { background: transparent; border: 1px solid rgba(255,255,255,0.2); color: #aaa; padding: 8px 15px; border-radius: 15px; cursor: pointer; font-size: 0.8em; }
+        .history-list { max-height: 200px; overflow-y: auto; display: none; }
+        .history-list.show { display: block; }
+        .history-item { display: flex; justify-content: space-between; padding: 8px; background: rgba(255,255,255,0.03); border-radius: 6px; margin-bottom: 5px; font-size: 0.8em; }
+        .history-period { color: #888; }
+        .history-nums { color: #ffd700; }
+        .section-title { font-size: 0.9em; margin-bottom: 8px; }
+        .daily-lucky { text-align: center; padding: 15px; background: linear-gradient(135deg, rgba(255,215,0,0.1), rgba(255,140,0,0.1)); border-radius: 12px; margin-bottom: 12px; }
+        .daily-label { font-size: 0.7em; color: #aaa; }
+        .daily-nums { font-size: 1.3em; color: #ffd700; font-weight: bold; margin-top: 5px; }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>🎰 樂透幸運號碼</h1>
+        
+        <div class="card">
+            <div class="lotto-type-btns">
+                <button class="lotto-btn active" data-type="649">大樂透</button>
+                <button class="lotto-btn" data-type="539">今彩539</button>
+                <button class="lotto-btn" data-type="power">威力彩</button>
+            </div>
+        </div>
+        
+        <div class="jackpot">
+            <div class="jackpot-label">💰 頭獎累積獎金</div>
+            <div class="jackpot-val" id="jackpot">NT$ 1.2 億</div>
+        </div>
+        
+        <div class="card">
+            <div class="daily-lucky">
+                <div class="daily-label">🎲 今日幸運號碼</div>
+                <div class="daily-nums" id="dailyLucky">-</div>
+            </div>
+        </div>
         
         <div class="card">
             <div style="font-size:0.75em;color:#aaa;text-align:center;margin-bottom:10px;">
@@ -73,6 +123,20 @@
         </div>
         
         <div class="card">
+            <div class="section-title">📊 奇偶比例</div>
+            <div class="odd-even">
+                <div class="oe-item">
+                    <div class="oe-bar"><div class="oe-fill odd" id="oddBar" style="height:50%"></div></div>
+                    <div class="oe-label">奇數 <span id="oddCount">3</span></div>
+                </div>
+                <div class="oe-item">
+                    <div class="oe-bar"><div class="oe-fill even" id="evenBar" style="height:50%"></div></div>
+                    <div class="oe-label">偶數 <span id="evenCount">3</span></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
             <div class="stats">
                 <div class="stat"><div class="stat-val" id="consRate">-</div><div class="stat-label">連號機率</div></div>
                 <div class="stat"><div class="stat-val" id="repeatRate">-</div><div class="stat-label">重複機率</div></div>
@@ -82,16 +146,26 @@
         
         <div class="card">
             <div class="trend-title">
-                <div style="font-size:0.9em;">📈 趨勢圖（滑動窗區間統計）</div>
+                <div style="font-size:0.9em;">📈 趨勢圖（滑動窗區間）</div>
                 <div class="trend-controls">
                     <button class="trend-btn active" data-num="hot">🔥熱門</button>
                     <button class="trend-btn" data-num="cold">❄️冷門</button>
                 </div>
             </div>
-            <div style="font-size:0.65em;color:#888;margin-bottom:5px;">橫軸：期數（舊→新） | 縱軸：開出次數 | 綠線：平均</div>
+            <div style="font-size:0.65em;color:#888;margin-bottom:5px;">橫軸：期數（舊→新） | 縱軸：開出次數</div>
             <div class="chart-container">
                 <canvas id="trendChart"></canvas>
             </div>
+        </div>
+        
+        <div class="card">
+            <div class="section-title">🔥 號碼熱力圖</div>
+            <div class="heatmap" id="heatmap"></div>
+        </div>
+        
+        <div class="card">
+            <div class="section-title">🔗 號碼對數 TOP10</div>
+            <div class="pair-grid" id="pairGrid"></div>
         </div>
         
         <div class="card">
@@ -105,6 +179,13 @@
         </div>
         
         <div class="card">
+            <div class="history-toggle">
+                <button id="toggleHistory">📋 展開歷史紀錄 ▾</button>
+            </div>
+            <div class="history-list" id="historyList"></div>
+        </div>
+        
+        <div class="card">
             <div style="font-size:0.9em;margin-bottom:8px;">❤️ 我的收藏</div>
             <div id="favList"></div>
         </div>
@@ -113,326 +194,394 @@
     </div>
 
     <script>
-        // 數據
-        let data = [];
-        let stats = { counter: {}, hot: [], cold: [], trends: {} };
-        let currentMode = 'balanced';
-        let currentTrendNum = 'hot';
-        let currentNums = [];
-        let currentSpecial = 0;
-        let chart = null;
+    const LOTTO_CONFIG = {
+        '649': { name: '大樂透', maxNum: 49, pickNum: 6, special: true, jackpot: '1.2 億' },
+        '539': { name: '今彩539', maxNum: 39, pickNum: 5, special: false, jackpot: '800 萬' },
+        'power': { name: '威力彩', maxNum: 38, pickNum: 6, special: true, jackpot: '3.2 億' }
+    };
+    
+    let data = [];
+    let stats = { counter: {}, hot: [], cold: [], trends: {}, pairs: {}, oddCount: 0, evenCount: 0, maxCount: 1 };
+    let currentType = '649';
+    let currentMode = 'balanced';
+    let currentTrendNum = 'hot';
+    let currentNums = [];
+    let currentSpecial = 0;
+    let chart = null;
+    
+    const CONS_RATE = 0.56;
+    const REPEAT_RATE = 0.20;
+    const WINDOW_SIZE = 20;
+    const REF_POINTS = 20;
+    
+    init();
+    
+    async function init() {
+        await loadData();
+        analyze();
+        generate();
+        renderDailyLucky();
+        renderFavorites();
+        renderTrendChart();
+        renderHeatmap();
+        renderPairs();
+        renderHistory();
         
-        // 論文參數
-        const CONS_RATE = 0.56;
-        const REPEAT_RATE = 0.20;
-        const WINDOW_SIZE = 20;  // 滑動窗寬度
-        const REF_POINTS = 20;    // 參考點數
+        document.querySelectorAll('.lotto-btn').forEach(btn => {
+            btn.onclick = () => {
+                document.querySelectorAll('.lotto-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentType = btn.dataset.type;
+                updateLottoType();
+            };
+        });
         
-        // 初始化
-        init();
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.onclick = () => {
+                document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentMode = btn.dataset.mode;
+                generate();
+            };
+        });
         
-        async function init() {
-            await loadData();
-            analyze();
-            generate();
-            renderFavorites();
-            renderTrendChart();
-            
-            // 按鈕事件
-            document.querySelectorAll('.mode-btn').forEach(btn => {
-                btn.onclick = () => {
-                    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    currentMode = btn.dataset.mode;
-                    generate();
-                };
-            });
-            
-            // 趨勢圖切換
-            document.querySelectorAll('.trend-btn').forEach(btn => {
-                btn.onclick = () => {
-                    document.querySelectorAll('.trend-btn').forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    currentTrendNum = btn.dataset.num;
-                    updateTrendChart();
-                };
-            });
-            
-            document.getElementById('genBtn').onclick = generate;
-            document.getElementById('favBtn').onclick = saveFav;
-        }
+        document.querySelectorAll('.trend-btn').forEach(btn => {
+            btn.onclick = () => {
+                document.querySelectorAll('.trend-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentTrendNum = btn.dataset.num;
+                updateTrendChart();
+            };
+        });
         
-        async function loadData() {
-            const months = ['2025-09','2025-10','2025-11','2025-12','2026-01','2026-02'];
-            
-            for (let m of months) {
-                try {
-                    let r = await fetch(`https://api.taiwanlottery.com/TLCAPIWeB/Lottery/Lotto649Result?period&month=${m}&pageNum=1&pageSize=50`);
-                    let d = await r.json();
-                    if (d.content && d.content.lotto649Res) {
-                        data.push(...d.content.lotto649Res);
-                    }
-                } catch(e) {}
-            }
-            
-            // 依期數排序（舊到新）
-            data.sort((a, b) => a.lottoPeriodNo - b.lottoPeriodNo);
-            
-            if (data.length < 10) {
-                // 離線樣本
-                for (let i = 0; i < 50; i++) {
-                    let nums = [];
-                    while (nums.length < 6) {
-                        let n = Math.floor(Math.random() * 49) + 1;
-                        if (!nums.includes(n)) nums.push(n);
-                    }
-                    data.push({
-                        drawNumberSize: [...nums.sort((a,b)=>a-b), Math.floor(Math.random() * 49) + 1]
-                    });
+        document.getElementById('toggleHistory').onclick = () => {
+            const list = document.getElementById('historyList');
+            const btn = document.getElementById('toggleHistory');
+            list.classList.toggle('show');
+            btn.innerHTML = list.classList.contains('show') ? '📋 收合歷史紀錄 ▴' : '📋 展開歷史紀錄 ▾';
+        };
+        
+        document.getElementById('genBtn').onclick = generate;
+        document.getElementById('favBtn').onclick = saveFav;
+    }
+    
+    function updateLottoType() {
+        const config = LOTTO_CONFIG[currentType];
+        document.getElementById('jackpot').textContent = 'NT$ ' + config.jackpot;
+        generate();
+        analyze();
+        updateTrendChart();
+        renderHeatmap();
+        renderPairs();
+        renderHistory();
+    }
+    
+    async function loadData() {
+        const months = ['2025-09','2025-10','2025-11','2025-12','2026-01','2026-02'];
+        
+        for (let m of months) {
+            try {
+                let r = await fetch('https://api.taiwanlottery.com/TLCAPIWeB/Lottery/Lotto649Result?period&month=' + m + '&pageNum=1&pageSize=50');
+                let d = await r.json();
+                if (d.content && d.content.lotto649Res) {
+                    data.push(...d.content.lotto649Res);
                 }
+            } catch(e) {}
+        }
+        
+        data.sort((a, b) => a.lottoPeriodNo - b.lottoPeriodNo);
+        
+        if (data.length < 10) {
+            generateSampleData();
+        }
+    }
+    
+    function generateSampleData() {
+        const config = LOTTO_CONFIG[currentType];
+        for (let i = 0; i < 50; i++) {
+            let nums = [];
+            while (nums.length < config.pickNum) {
+                let n = Math.floor(Math.random() * config.maxNum) + 1;
+                if (!nums.includes(n)) nums.push(n);
             }
+            data.push({ drawNumberSize: nums.sort((a,b)=>a-b) });
         }
+    }
+    
+    function analyze() {
+        const config = LOTTO_CONFIG[currentType];
+        let main = [], special = [], cons = 0, repeat = 0, prev = null;
+        let odd = 0, even = 0;
+        let pairs = {};
         
-        function analyze() {
-            let main = [], special = [], cons = 0, repeat = 0, prev = null;
-            
-            data.forEach(d => {
-                let nums = d.drawNumberSize || [];
-                if (nums.length >= 7) {
-                    let m = nums.slice(0,6).sort((a,b)=>a-b);
-                    main.push(...m);
-                    special.push(nums[6]);
-                    
-                    // 連號
-                    for (let i = 0; i < m.length-1; i++) {
-                        if (m[i+1] - m[i] === 1) cons++;
-                    }
-                    // 重複
-                    if (prev) {
-                        let c = m.filter(x => prev.includes(x)).length;
-                        if (c >= 2) repeat++;
-                    }
-                    prev = m;
-                }
-            });
-            
-            // 計數
-            let counter = {};
-            main.forEach(n => counter[n] = (counter[n] || 0) + 1);
-            
-            // 排序
-            let sorted = Object.entries(counter).sort((a,b) => b[1] - a[1]);
-            stats = { counter, hot: sorted.slice(0,10).map(x=>parseInt(x[0])), cold: sorted.slice(-10).reverse().map(x=>parseInt(x[0])), trends: {} };
-            
-            // 滑動窗區間統計
-            calculateTrends();
-            
-            // 顯示
-            document.getElementById('consRate').textContent = (cons / data.length * 100).toFixed(1) + '%';
-            document.getElementById('repeatRate').textContent = (repeat / (data.length-1) * 100).toFixed(1) + '%';
-            document.getElementById('totalDraws').textContent = data.length;
-            document.getElementById('hotNums').innerHTML = stats.hot.map(n => `<span class="num-tag num-hot">${n}</span>`).join('');
-            document.getElementById('coldNums').innerHTML = stats.cold.map(n => `<span class="num-tag num-cold">${n}</span>`).join('');
-        }
-        
-        // 滑動窗區間統計法
-        function calculateTrends() {
-            let mainNums = data.map(d => (d.drawNumberSize || []).slice(0,6)).filter(n => n.length >= 6);
-            let totalPeriods = mainNums.length;
-            
-            // 對每個號碼計算滑動窗趨勢
-            for (let num = 1; num <= 49; num++) {
-                let trends = [];
+        data.forEach(d => {
+            let nums = d.drawNumberSize || [];
+            if (nums.length >= config.pickNum) {
+                let m = nums.slice(0, config.pickNum).sort((a,b)=>a-b);
+                main.push(...m);
+                if (config.special) special.push(nums[config.pickNum]);
                 
-                // 產生參考點
-                for (let i = 0; i < REF_POINTS; i++) {
-                    let start = Math.max(0, totalPeriods - WINDOW_SIZE - i);
-                    let end = totalPeriods - i;
-                    
-                    if (start < end) {
-                        let count = 0;
-                        for (let j = start; j < end; j++) {
-                            if (mainNums[j].includes(num)) count++;
-                        }
-                        trends.push(count);
-                    }
+                m.forEach(n => n % 2 === 0 ? even++ : odd++);
+                
+                for (let i = 0; i < m.length-1; i++) {
+                    if (m[i+1] - m[i] === 1) cons++;
                 }
                 
-                if (trends.length > 0) {
-                    stats.trends[num] = trends;
+                if (prev) {
+                    let c = m.filter(x => prev.includes(x)).length;
+                    if (c >= 2) repeat++;
                 }
-            }
-        }
-        
-        function renderTrendChart() {
-            let ctx = document.getElementById('trendChart').getContext('2d');
-            
-            let numbers = currentTrendNum === 'hot' ? stats.hot.slice(0,5) : stats.cold.slice(0,5);
-            let datasets = numbers.map((num, i) => {
-                let trend = stats.trends[num] || [];
-                let color = currentTrendNum === 'hot' ? 
-                    `rgba(255, ${100 + i*30}, ${100 + i*30}, 1)` : 
-                    `rgba(78, ${205 - i*20}, ${196 - i*20}, 1)`;
-                return {
-                    label: '號碼 ' + num,
-                    data: trend,
-                    borderColor: color,
-                    backgroundColor: color.replace('1)', '0.1)'),
-                    fill: true,
-                    tension: 0.3,
-                    borderWidth: 2
-                };
-            });
-            
-            // 平均線
-            let avgData = [];
-            if (datasets.length > 0 && datasets[0].data.length > 0) {
-                let len = datasets[0].data.length;
-                for (let i = 0; i < len; i++) {
-                    let sum = datasets.reduce((acc, d) => acc + (d.data[i] || 0), 0);
-                    avgData.push(sum / datasets.length);
-                }
-            }
-            
-            let labels = datasets.length > 0 ? 
-                datasets[0].data.map((_, i) => `期${i+1}`) : [];
-            
-            chart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [
-                        ...datasets,
-                        {
-                            label: '平均',
-                            data: avgData,
-                            borderColor: 'rgba(0, 255, 127, 0.8)',
-                            borderDash: [5, 5],
-                            borderWidth: 2,
-                            pointRadius: 0,
-                            fill: false
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: true,
-                            position: 'bottom',
-                            labels: { color: '#aaa', boxWidth: 12, font: { size: 10 } }
-                        }
-                    },
-                    scales: {
-                        x: {
-                            ticks: { color: '#888', font: { size: 9 } },
-                            grid: { color: 'rgba(255,255,255,0.05)' }
-                        },
-                        y: {
-                            ticks: { color: '#888', font: { size: 9 } },
-                            grid: { color: 'rgba(255,255,255,0.05)' },
-                            beginAtZero: true
-                        }
+                
+                for (let i = 0; i < m.length; i++) {
+                    for (let j = i+1; j < m.length; j++) {
+                        let key = [m[i], m[j]].sort((a,b)=>a-b).join('-');
+                        pairs[key] = (pairs[key] || 0) + 1;
                     }
                 }
-            });
+                
+                prev = m;
+            }
+        });
+        
+        let counter = {};
+        main.forEach(n => counter[n] = (counter[n] || 0) + 1);
+        
+        let sorted = Object.entries(counter).sort((a,b) => b[1] - a[1]);
+        let maxCount = sorted.length > 0 ? sorted[0][1] : 1;
+        
+        stats = { 
+            counter, 
+            hot: sorted.slice(0,10).map(x=>parseInt(x[0])), 
+            cold: sorted.slice(-10).reverse().map(x=>parseInt(x[0])),
+            trends: {},
+            pairs: Object.entries(pairs).sort((a,b) => b[1] - a[1]).slice(0, 12),
+            oddCount: odd,
+            evenCount: even,
+            maxCount: maxCount
+        };
+        
+        calculateTrends();
+        
+        document.getElementById('consRate').textContent = (cons / data.length * 100).toFixed(1) + '%';
+        document.getElementById('repeatRate').textContent = (repeat / Math.max(1, data.length-1) * 100).toFixed(1) + '%';
+        document.getElementById('totalDraws').textContent = data.length;
+        document.getElementById('hotNums').innerHTML = stats.hot.map(n => '<span class="num-tag num-hot">' + n + '</span>').join('');
+        document.getElementById('coldNums').innerHTML = stats.cold.map(n => '<span class="num-tag num-cold">' + n + '</span>').join('');
+        
+        let totalOE = stats.oddCount + stats.evenCount;
+        let oddPct = totalOE > 0 ? (stats.oddCount / totalOE * 100) : 50;
+        let evenPct = totalOE > 0 ? (stats.evenCount / totalOE * 100) : 50;
+        document.getElementById('oddBar').style.height = oddPct + '%';
+        document.getElementById('evenBar').style.height = evenPct + '%';
+        document.getElementById('oddCount').textContent = Math.round(oddPct) + '%';
+        document.getElementById('evenCount').textContent = Math.round(evenPct) + '%';
+    }
+    
+    function calculateTrends() {
+        const config = LOTTO_CONFIG[currentType];
+        let mainNums = data.map(d => (d.drawNumberSize || []).slice(0, config.pickNum)).filter(n => n.length >= config.pickNum);
+        let totalPeriods = mainNums.length;
+        
+        for (let num = 1; num <= config.maxNum; num++) {
+            let trends = [];
+            for (let i = 0; i < REF_POINTS; i++) {
+                let start = Math.max(0, totalPeriods - WINDOW_SIZE - i);
+                let end = totalPeriods - i;
+                if (start < end) {
+                    let count = 0;
+                    for (let j = start; j < end; j++) {
+                        if (mainNums[j].includes(num)) count++;
+                    }
+                    trends.push(count);
+                }
+            }
+            if (trends.length > 0) stats.trends[num] = trends;
+        }
+    }
+    
+    function renderHeatmap() {
+        const config = LOTTO_CONFIG[currentType];
+        let html = '';
+        for (let i = 1; i <= config.maxNum; i++) {
+            let count = stats.counter[i] || 0;
+            let intensity = stats.maxCount > 0 ? count / stats.maxCount : 0;
+            let r = Math.round(255 * intensity);
+            let g = Math.round(100 * (1 - intensity));
+            let b = Math.round(100 * (1 - intensity));
+            let bg = 'rgba(' + r + ',' + g + ',' + b + ',0.6)';
+            let color = intensity > 0.5 ? '#fff' : '#aaa';
+            html += '<div class="heatmap-cell" style="background:' + bg + ';color:' + color + '">' + i + '</div>';
+        }
+        document.getElementById('heatmap').innerHTML = html;
+    }
+    
+    function renderPairs() {
+        let html = stats.pairs.slice(0, 12).map(p => {
+            let nums = p[0].split('-');
+            return '<div class="pair-item"><div class="pair-nums">' + nums[0] + '-' + nums[1] + '</div><div class="pair-count">' + p[1] + '次</div></div>';
+        }).join('');
+        document.getElementById('pairGrid').innerHTML = html;
+    }
+    
+    function renderTrendChart() {
+        let ctx = document.getElementById('trendChart').getContext('2d');
+        let numbers = currentTrendNum === 'hot' ? stats.hot.slice(0,5) : stats.cold.slice(0,5);
+        let datasets = numbers.map((num, i) => {
+            let trend = stats.trends[num] || [];
+            let color = currentTrendNum === 'hot' ? 
+                'rgba(255,' + (100 + i*30) + ',' + (100 + i*30) + ',1)' : 
+                'rgba(78,' + (205 - i*20) + ',' + (196 - i*20) + ',1)';
+            return {
+                label: '號碼 ' + num,
+                data: trend,
+                borderColor: color,
+                backgroundColor: color.replace('1)', '0.1)'),
+                fill: true,
+                tension: 0.3,
+                borderWidth: 2
+            };
+        });
+        
+        let avgData = [];
+        if (datasets.length > 0 && datasets[0].data.length > 0) {
+            let len = datasets[0].data.length;
+            for (let i = 0; i < len; i++) {
+                let sum = datasets.reduce((acc, d) => acc + (d.data[i] || 0), 0);
+                avgData.push(sum / datasets.length);
+            }
         }
         
-        function updateTrendChart() {
-            if (chart) {
-                chart.destroy();
+        let labels = datasets.length > 0 ? datasets[0].data.map((_, i) => '期'+(i+1)) : [];
+        
+        chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    ...datasets,
+                    { label: '平均', data: avgData, borderColor: 'rgba(0,255,127,0.8)', borderDash: [5,5], borderWidth: 2, pointRadius: 0, fill: false }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: true, position: 'bottom', labels: { color: '#aaa', boxWidth: 12, font: { size: 10 } } } },
+                scales: {
+                    x: { ticks: { color: '#888', font: { size: 9 } }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                    y: { ticks: { color: '#888', font: { size: 9 } }, grid: { color: 'rgba(255,255,255,0.05)' }, beginAtZero: true }
+                }
             }
-            renderTrendChart();
+        });
+    }
+    
+    function updateTrendChart() {
+        if (chart) chart.destroy();
+        renderTrendChart();
+    }
+    
+    function renderHistory() {
+        let html = data.slice(0, 20).reverse().map(d => {
+            let nums = (d.drawNumberSize || []).slice(0, 6).join(', ');
+            return '<div class="history-item"><span class="history-period">' + (d.lottoPeriodNo || '?') + '</span><span class="history-nums">' + nums + '</span></div>';
+        }).join('');
+        document.getElementById('historyList').innerHTML = html || '<p style="color:#888;text-align:center;">無歷史資料</p>';
+    }
+    
+    function renderDailyLucky() {
+        let today = new Date();
+        let seed = today.getFullYear() * 10000 + (today.getMonth()+1) * 100 + today.getDate();
+        let rng = function() { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
+        
+        const config = LOTTO_CONFIG[currentType];
+        let nums = [];
+        while (nums.length < config.pickNum) {
+            let n = Math.floor(rng() * config.maxNum) + 1;
+            if (!nums.includes(n)) nums.push(n);
+        }
+        nums.sort((a,b) => a-b);
+        
+        document.getElementById('dailyLucky').innerHTML = nums.map(n => '<span style="margin:0 3px">' + n + '</span>').join('');
+    }
+    
+    function generate() {
+        const config = LOTTO_CONFIG[currentType];
+        let { counter, hot, cold } = stats;
+        let all = Array.from({length: config.maxNum}, (_,i) => i + 1);
+        
+        let hasCons = Math.random() < CONS_RATE;
+        let hasRepeat = Math.random() < REPEAT_RATE;
+        let selected = [];
+        
+        if (currentMode === 'hot') {
+            selected = hot.slice(0, config.pickNum).sort((a,b) => a-b);
+        } else if (currentMode === 'cold') {
+            selected = cold.slice(0, config.pickNum).sort((a,b) => a-b);
+        } else if (currentMode === 'drag' && data.length > 0) {
+            let prev = data[data.length-1].drawNumberSize.slice(0, config.pickNum);
+            selected = prev.slice(0, Math.min(3, prev.length));
+        } else {
+            if (hasRepeat && data.length > 0) {
+                let prev = data[data.length-1].drawNumberSize.slice(0, config.pickNum);
+                selected = prev.slice(0, Math.min(2, prev.length));
+            }
+            if (hasCons) {
+                let base = Math.floor(Math.random() * (config.maxNum - 2)) + 1;
+                if (!selected.includes(base)) selected.push(base);
+                if (!selected.includes(base+1) && base < config.maxNum - 1) selected.push(base+1);
+            }
         }
         
-        function generate() {
-            let { counter, hot, cold } = stats;
-            let all = Array.from({length: 49}, (_,i) => i + 1);
-            let weights = all.map(n => (counter[n] || 0) + 1);
-            
-            // 論文模型
-            let hasCons = Math.random() < CONS_RATE;
-            let hasRepeat = Math.random() < REPEAT_RATE;
-            
-            let selected = [];
-            
-            // 模式選擇
-            if (currentMode === 'hot') {
-                selected = hot.slice(0,6).sort((a,b) => a-b);
-            } else if (currentMode === 'cold') {
-                selected = [...cold].slice(0,6).sort((a,b) => a-b);
-            } else if (currentMode === 'drag' && data.length > 0) {
-                let prev = data[data.length-1].drawNumberSize.slice(0,6);
-                selected = prev.slice(0, Math.min(3, prev.length));
-            } else {
-                // balanced
-                if (hasRepeat && data.length > 0) {
-                    let prev = data[data.length-1].drawNumberSize.slice(0,6);
-                    selected = prev.slice(0, Math.min(2, prev.length));
-                }
-                if (hasCons) {
-                    let base = Math.floor(Math.random() * 48) + 1;
-                    if (!selected.includes(base)) selected.push(base);
-                    if (!selected.includes(base+1) && base < 49) selected.push(base+1);
-                }
-            }
-            
-            // 補滿6個
-            while (selected.length < 6) {
-                let idx = Math.floor(Math.random() * 49);
-                let n = all[idx];
-                if (!selected.includes(n)) selected.push(n);
-            }
-            
-            selected = selected.slice(0,6).sort((a,b) => a-b);
-            
-            // 特別號
+        while (selected.length < config.pickNum) {
+            let idx = Math.floor(Math.random() * config.maxNum);
+            let n = all[idx];
+            if (!selected.includes(n)) selected.push(n);
+        }
+        
+        selected = selected.slice(0, config.pickNum).sort((a,b) => a-b);
+        
+        if (config.special) {
             let avail = all.filter(n => !selected.includes(n));
-            let specIdx = Math.floor(Math.random() * avail.length);
-            currentSpecial = avail[specIdx];
-            
-            currentNums = selected;
-            
-            // 顯示
-            document.getElementById('numbers').innerHTML = selected.map(n => `<div class="ball">${n}</div>`).join('');
-            document.getElementById('special').textContent = currentSpecial;
-            
-            document.getElementById('consTag').className = 'tag ' + (hasCons ? 'tag-yes' : 'tag-no');
-            document.getElementById('consTag').textContent = hasCons ? '✅ 有連號' : '❌ 無連號';
-            document.getElementById('repeatTag').className = 'tag ' + (hasRepeat ? 'tag-yes' : 'tag-no');
-            document.getElementById('repeatTag').textContent = hasRepeat ? '✅ 參考上期' : '❌ 全新組合';
+            currentSpecial = avail[Math.floor(Math.random() * avail.length)];
         }
         
-        function saveFav() {
-            let favs = JSON.parse(localStorage.getItem('lotto_favs') || '[]');
-            favs.unshift({ nums: [...currentNums], special: currentSpecial });
-            favs = favs.slice(0, 20);
-            localStorage.setItem('lotto_favs', JSON.stringify(favs));
-            renderFavorites();
-        }
+        currentNums = selected;
         
-        function renderFavorites() {
-            let favs = JSON.parse(localStorage.getItem('lotto_favs') || '[]');
-            let el = document.getElementById('favList');
-            if (favs.length === 0) {
-                el.innerHTML = '<p style="color:#aaa;text-align:center;font-size:0.85em;">尚無收藏</p>';
-                return;
-            }
-            el.innerHTML = favs.map((f, i) => `
-                <div class="fav-item">
-                    <span>${f.nums.join(', ')} <span style="color:#f55768">⭐${f.special}</span></span>
-                    <button class="del-btn" onclick="delFav(${i})">刪</button>
-                </div>
-            `).join('');
-        }
+        document.getElementById('numbers').innerHTML = selected.map(n => '<div class="ball">' + n + '</div>').join('');
+        document.getElementById('special').textContent = config.special ? currentSpecial : '-';
         
-        function delFav(i) {
-            let favs = JSON.parse(localStorage.getItem('lotto_favs') || '[]');
-            favs.splice(i, 1);
-            localStorage.setItem('lotto_favs', JSON.stringify(favs));
-            renderFavorites();
+        document.getElementById('consTag').className = 'tag ' + (hasCons ? 'tag-yes' : 'tag-no');
+        document.getElementById('consTag').textContent = hasCons ? '✅ 有連號' : '❌ 無連號';
+        document.getElementById('repeatTag').className = 'tag ' + (hasRepeat ? 'tag-yes' : 'tag-no');
+        document.getElementById('repeatTag').textContent = hasRepeat ? '✅ 參考上期' : '❌ 全新組合';
+    }
+    
+    function saveFav() {
+        let favs = JSON.parse(localStorage.getItem('lotto_favs') || '[]');
+        favs.unshift({ type: currentType, nums: [...currentNums], special: currentSpecial });
+        favs = favs.slice(0, 20);
+        localStorage.setItem('lotto_favs', JSON.stringify(favs));
+        renderFavorites();
+    }
+    
+    function renderFavorites() {
+        let favs = JSON.parse(localStorage.getItem('lotto_favs') || '[]');
+        let el = document.getElementById('favList');
+        if (favs.length === 0) {
+            el.innerHTML = '<p style="color:#aaa;text-align:center;font-size:0.85em;">尚無收藏</p>';
+            return;
         }
+        el.innerHTML = favs.map(function(f, i) {
+            let specHtml = f.special ? '<span style="color:#f55768">⭐' + f.special + '</span>' : '';
+            return '<div class="fav-item"><span>' + f.nums.join(', ') + ' ' + specHtml + '</span><button class="del-btn" onclick="delFav(' + i + ')">刪</button></div>';
+        }).join('');
+    }
+    
+    function delFav(i) {
+        let favs = JSON.parse(localStorage.getItem('lotto_favs') || '[]');
+        favs.splice(i, 1);
+        localStorage.setItem('lotto_favs', JSON.stringify(favs));
+        renderFavorites();
+    }
     </script>
 </body>
 </html>
