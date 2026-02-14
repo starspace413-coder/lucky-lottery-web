@@ -625,20 +625,23 @@
     }
     
     async function loadHoroscope(zodiac) {
+        // 簡體轉繁體
+        const s2t = s => s?s.replace(/于/g,'於').replace(/万/g,'萬').replace(/与/g,'與').replace(/为/g,'為').replace(/无/g,'無').replace(/开/g,'開').replace(/见/g,'見').replace(/贝/g,'貝').replace(/贞/g,'貞').replace(/财/g,'財').replace(/贡/g,'貢').replace(/贤/g,'賢').replace(/质/g,'質').replace(/贩/g,'販').replace(/贪/g,'貪').replace(/购/g,'購').replace(/贮/g,'貯').replace(/贱/g,'賤').replace(/贴/g,'貼').replace(/贷/g,'貸').replace(/贺/g,'賀').replace(/贾/g,'賈').replace(/贼/g,'賊').replace(/债/g,'債').replace(/倾/g,'傾').replace(/侦/g,'偵').replace(/储/g,'儲').replace(/养/g,'養').replace(/净/g,'淨').replace(/击/g,'擊').replace(/剧/g,'劇').replace(/动/g,'動').replace(/务/g,'務').replace(/劳/g,'勞').replace(/势/g,'勢').replace(/区/g,'區').replace(/协/g,'協').replace(/单/g,'單').replace(/卖/g,'賣').replace(/博/g,'博').replace(/卜/g,'卜').replace(/卫/g,'衛').replace(/县/g,'縣').replace(/参/g,'參').replace(/发/g,'發').replace(/变/g,'變').replace(/叠/g,'疊').replace(/台/g,'臺').replace(/吕/g,'呂').replace(/听/g,'聽').replace(/启/g,'啟').replace(/吴/g,'吳').replace(/骂/g,'罵').replace(/圆/g,'圓').replace(/场/g,'場').replace(/块/g,'塊').replace(/坛/g,'壇').replace(/坠/g,'墜').replace(/坡/g,'坡').replace(/坤/g,'坤').replace(/坦/g,'坦').replace(/垒/g,'壘').replace(/垫/g,'墊').replace(/埋/g,'埋').replace(/城/g,'城').replace(/域/g,'域').replace(/培/g,'培').replace(/基/g,'基').replace(/堂/g,'堂').replace(/堡/g,'堡').replace(/备/g,'備').replace(/复/g,'複').replace(/处/g,'處').replace(/头/g,'頭').replace(/买/g,'買').replace(/卖/g,'賣').replace(/孙/g,'孫').replace(/学/g,'學').replace(/宫/g,'宮').replace(/宽/g,'寬').replace(/宾/g,'賓').replace(/对/g,'對').replace(/寻/g,'尋').replace(/导/g,'導').replace(/寿/g,'壽').replace(/将/g,'將').replace(/尝/g,'嘗').replace(/尧/g,'堯').replace(/则/g,'則').replace(/刚/g,'剛').replace(/创/g,'創').replace(/刘/g,'劉').replace(/别/g,'別').replace(/剑/g,'劍').replace(/剥/g,'剝').replace(/剧/g,'劇').replace(/劝/g,'勸').replace(/办/g,'辦').replace(/务/g,'務').replace(/动/g,'動').replace(/励/g,'勵').replace(/劲/g,'勁').replace(/劳/g,'勞').replace(/勇/g,'勇').replace(/几/g,'幾').replace(/几/g,'幾').replace(/几/g,'幾').replace(/几/g,'幾').replace(/几/g,'幾').replace(/几/g,'幾').replace(/几/g,'幾').replace(/几/g,'幾'):'';
+        
         try {
             let r = await fetch('https://v2.xxapi.cn/api/horoscope?type=' + zodiac + '&time=today');
             let d = await r.json();
             if (d.code === 200 && d.data) {
                 horoscopeData = d.data;
-                document.getElementById('horoName').textContent = d.data.title || '';
+                document.getElementById('horoName').textContent = s2t(d.data.title) || '';
                 document.getElementById('scoreAll').textContent = d.data.index?.all || '-';
                 document.getElementById('scoreLove').textContent = d.data.index?.love || '-';
                 document.getElementById('scoreMoney').textContent = d.data.index?.money || '-';
                 document.getElementById('scoreWork').textContent = d.data.index?.work || '-';
                 document.getElementById('scoreHealth').textContent = d.data.index?.health || '-';
-                document.getElementById('horoYi').textContent = '宜：' + (d.data.todo?.yi || '-');
-                document.getElementById('horoJi').textContent = '忌：' + (d.data.todo?.ji || '-');
-                document.getElementById('horoComment').textContent = d.data.shortcomment || '';
+                document.getElementById('horoYi').textContent = '宜：' + s2t(d.data.todo?.yi) || '-';
+                document.getElementById('horoJi').textContent = '忌：' + s2t(d.data.todo?.ji) || '-';
+                document.getElementById('horoComment').textContent = s2t(d.data.shortcomment) || '';
             }
         } catch(e) {
             console.log('Horoscope API error:', e);
