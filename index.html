@@ -62,6 +62,20 @@
         .oe-label { font-size: 0.7em; color: #aaa; margin-top: 5px; }
         .history-toggle { text-align: center; margin-bottom: 10px; }
         .history-toggle button { background: transparent; border: 1px solid rgba(255,255,255,0.2); color: #aaa; padding: 8px 15px; border-radius: 15px; cursor: pointer; font-size: 0.8em; }
+        .zodiac-btns { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; margin-bottom: 12px; }
+        .zodiac-btn { padding: 8px 4px; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; background: rgba(255,255,255,0.05); color: #aaa; cursor: pointer; font-size: 0.65em; text-align: center; }
+        .zodiac-btn.active { border-color: #ffd700; color: #ffd700; background: rgba(255,215,0,0.1); }
+        .horoscope { background: linear-gradient(135deg, rgba(100,100,200,0.2), rgba(150,100,200,0.2)); }
+        .horo-title { font-size: 1em; text-align: center; margin-bottom: 10px; }
+        .horo-name { font-size: 1.2em; color: #ffd700; font-weight: bold; }
+        .horo-lucky { display: flex; justify-content: center; gap: 15px; margin: 10px 0; }
+        .horo-luckyi { padding: 5px 10px; background: rgba(0,255,127,0.1); border-radius: 8px; font-size: 0.75em; }
+        .horo-luckyj { padding: 5px 10px; background: rgba(255,99,71,0.1); border-radius: 8px; font-size: 0.75em; }
+        .horo-scores { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin-top: 10px; }
+        .horo-score { text-align: center; padding: 8px 3px; background: rgba(255,255,255,0.05); border-radius: 6px; }
+        .horo-score-val { font-size: 1em; font-weight: bold; color: #ffd700; }
+        .horo-score-label { font-size: 0.6em; color: #aaa; }
+        .horo-comment { font-size: 0.7em; color: #aaa; text-align: center; margin-top: 10px; font-style: italic; }
         .history-list { max-height: 200px; overflow-y: auto; display: none; }
         .history-list.show { display: block; }
         .history-item { display: flex; justify-content: space-between; padding: 8px; background: rgba(255,255,255,0.03); border-radius: 6px; margin-bottom: 5px; font-size: 0.8em; }
@@ -88,6 +102,24 @@
         <div class="jackpot">
             <div class="jackpot-label">💰 頭獎累積獎金</div>
             <div class="jackpot-val" id="jackpot">NT$ 1.2 億</div>
+        </div>
+        
+        <!-- 星座運勢 -->
+        <div class="card horoscope">
+            <div class="horo-title"><span class="horo-name" id="horoName">白羊座</span> 今日運勢</div>
+            <div class="zodiac-btns" id="zodiacBtns"></div>
+            <div class="horo-lucky">
+                <span class="horo-luckyi" id="horoYi">宜：-</span>
+                <span class="horo-luckyj" id="horoJi">忌：-</span>
+            </div>
+            <div class="horo-scores">
+                <div class="horo-score"><div class="horo-score-val" id="scoreAll">-</div><div class="horo-score-label">整體</div></div>
+                <div class="horo-score"><div class="horo-score-val" id="scoreLove">-</div><div class="horo-score-label">愛情</div></div>
+                <div class="horo-score"><div class="horo-score-val" id="scoreMoney">-</div><div class="horo-score-label">財運</div></div>
+                <div class="horo-score"><div class="horo-score-val" id="scoreWork">-</div><div class="horo-score-label">事業</div></div>
+                <div class="horo-score"><div class="horo-score-val" id="scoreHealth">-</div><div class="horo-score-label">健康</div></div>
+            </div>
+            <div class="horo-comment" id="horoComment"></div>
         </div>
         
         <div class="card">
@@ -200,6 +232,24 @@
         'power': { name: '威力彩', maxNum: 38, pickNum: 6, special: true, jackpot: '3.2 億' }
     };
     
+    const ZODIAC_SIGNS = [
+        { id: 'aries', name: '白羊', emoji: '♈' },
+        { id: 'taurus', name: '金牛', emoji: '♉' },
+        { id: 'gemini', name: '雙子', emoji: '♊' },
+        { id: 'cancer', name: '巨蟹', emoji: '♋' },
+        { id: 'leo', name: '獅子', emoji: '♌' },
+        { id: 'virgo', name: '處女', emoji: '♍' },
+        { id: 'libra', name: '天秤', emoji: '♎' },
+        { id: 'scorpio', name: '天蠍', emoji: '♏' },
+        { id: 'sagittarius', name: '射手', emoji: '♐' },
+        { id: 'capricorn', name: '摩羯', emoji: '♑' },
+        { id: 'aquarius', name: '水瓶', emoji: '♒' },
+        { id: 'pisces', name: '雙魚', emoji: '♓' }
+    ];
+    
+    let currentZodiac = 'aries';
+    let horoscopeData = null;
+    
     let data = [];
     let stats = { counter: {}, hot: [], cold: [], trends: {}, pairs: {}, oddCount: 0, evenCount: 0, maxCount: 1 };
     let currentType = '649';
@@ -226,6 +276,8 @@
         renderHeatmap();
         renderPairs();
         renderHistory();
+        renderZodiacButtons();
+        loadHoroscope(currentZodiac);
         
         document.querySelectorAll('.lotto-btn').forEach(btn => {
             btn.onclick = () => {
@@ -485,6 +537,43 @@
             return '<div class="history-item"><span class="history-period">' + (d.lottoPeriodNo || '?') + '</span><span class="history-nums">' + nums + '</span></div>';
         }).join('');
         document.getElementById('historyList').innerHTML = html || '<p style="color:#888;text-align:center;">無歷史資料</p>';
+    }
+    
+    function renderZodiacButtons() {
+        let html = ZODIAC_SIGNS.map(z => 
+            '<div class="zodiac-btn' + (z.id === currentZodiac ? ' active' : '') + '" data-id="' + z.id + '">' + z.emoji + ' ' + z.name + '</div>'
+        ).join('');
+        document.getElementById('zodiacBtns').innerHTML = html;
+        
+        document.querySelectorAll('.zodiac-btn').forEach(btn => {
+            btn.onclick = () => {
+                document.querySelectorAll('.zodiac-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentZodiac = btn.dataset.id;
+                loadHoroscope(currentZodiac);
+            };
+        });
+    }
+    
+    async function loadHoroscope(zodiac) {
+        try {
+            let r = await fetch('https://v2.xxapi.cn/api/horoscope?type=' + zodiac + '&time=today');
+            let d = await r.json();
+            if (d.code === 200 && d.data) {
+                horoscopeData = d.data;
+                document.getElementById('horoName').textContent = d.data.title || '';
+                document.getElementById('scoreAll').textContent = d.data.index?.all || '-';
+                document.getElementById('scoreLove').textContent = d.data.index?.love || '-';
+                document.getElementById('scoreMoney').textContent = d.data.index?.money || '-';
+                document.getElementById('scoreWork').textContent = d.data.index?.work || '-';
+                document.getElementById('scoreHealth').textContent = d.data.index?.health || '-';
+                document.getElementById('horoYi').textContent = '宜：' + (d.data.todo?.yi || '-');
+                document.getElementById('horoJi').textContent = '忌：' + (d.data.todo?.ji || '-');
+                document.getElementById('horoComment').textContent = d.data.shortcomment || '';
+            }
+        } catch(e) {
+            console.log('Horoscope API error:', e);
+        }
     }
     
     function renderDailyLucky() {
