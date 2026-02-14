@@ -635,6 +635,16 @@
         
         currentNums = selected;
         
+        // 計算當次產生的奇偶比例
+        let oddCount = selected.filter(n => n % 2 === 1).length;
+        let evenCount = selected.length - oddCount;
+        let oddPct = (oddCount / selected.length * 100);
+        let evenPct = (evenCount / selected.length * 100);
+        document.getElementById('oddBar').style.height = oddPct + '%';
+        document.getElementById('evenBar').style.height = evenPct + '%';
+        document.getElementById('oddCount').textContent = oddCount + ' (' + Math.round(oddPct) + '%)';
+        document.getElementById('evenCount').textContent = evenCount + ' (' + Math.round(evenPct) + '%)';
+        
         document.getElementById('numbers').innerHTML = selected.map(n => '<div class="ball">' + n + '</div>').join('');
         document.getElementById('special').textContent = config.special ? currentSpecial : '-';
         
